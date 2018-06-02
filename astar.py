@@ -1,3 +1,4 @@
+import tqdm
 # Enter your code here. Read input from STDIN. Print output to STDOUT
 class Node:
     def __init__(self,value,point):
