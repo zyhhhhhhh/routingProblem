@@ -2,10 +2,11 @@ import gridInitialize
 import random
 import copy
 class QLearning_Solver(object):
-    def __init__(self, maze, display=False):
-        self.origField = maze
+    def __init__(self, field, display=False):
+        self.origField = field
         self.Qvalue = {}
         self.Field = copy.deepcopy(self.origField)
+
         self.alpha = 0.2
         self.gamma  = 0.9
         self.epsilon = 0.2
@@ -16,29 +17,36 @@ class QLearning_Solver(object):
         # print(self.origField.movable_vec)
     def qlearn(self, greedy_flg=False):
         self.Field = copy.deepcopy(self.origField)
+        self.Field.D = copy.deepcopy(self.origField.D)
+        self.Field.mazeBoard = copy.deepcopy(self.origField.mazeBoard)
+        self.Field.start_point= copy.deepcopy(self.origField.start_point)
+        self.Field.goal_point= copy.deepcopy(self.origField.goal_point)
+        self.Field.movable_vec = copy.deepcopy(self.origField.movable_vec)
         state = self.Field.randomPickStart()
         print('current qlearn movable vec:', self.Field.movable_vec)
-        print(self.Field.maze.D)
+        print(self.Field.D)
         while True:
             if greedy_flg:
                 self.steps += 1
                 action = self.choose_action_greedy(state)
                 print("current state: {0} -> action: {1} ".format(state, action))
                 if self.display:
-                    self.Field.display(action)
+                    self.Field.display()
                 reward, tf = self.Field.get_val(action)
                 self.score =  self.score + reward
                 print("current step: {0} \t score: {1}\n".format(self.steps, self.score))
                 if tf == True:
-                    print("Goal!")
+                    print("Goal!", self.Field.totalReward+2000)
                     break
             else:
                 action = self.choose_action(state)
-            if self.update_Qvalue(state, action):
-                break
+            if not greedy_flg:
+                if self.update_Qvalue(state, action):
+                    break
+                else:
+                    state = action
             else:
                 state = action
-
     def update_Qvalue(self, state, action):
         Q_s_a = self.get_Qvalue(state, action)
         mQ_s_a = max([self.get_Qvalue(action, n_action) for n_action in self.Field.get_actions(action)])
@@ -97,14 +105,14 @@ class QLearning_Solver(object):
 size = 10
 barriar_rate = 0.1
 
-maze = gridInitialize.maze()
-maze_field = gridInitialize.Field(maze)
-
+# maze = gridInitialize.maze()
+maze_field = gridInitialize.Field()
+mazeCopy = copy.deepcopy(maze_field)
 maze_field.display()
 
 
 
-learning_count = 1000
+learning_count = 10
 QL_solver = QLearning_Solver(maze_field, display=True)
 for i in range(learning_count):
     print('i!!!!!!',i)
@@ -117,3 +125,8 @@ QL_solver.dump_Qvalue()
 # In[54]:
 
 QL_solver.qlearn(greedy_flg=True)
+
+
+mazeCopy.randomConnectAll()
+mazeCopy.totalReward += 2000
+print(mazeCopy.totalReward)

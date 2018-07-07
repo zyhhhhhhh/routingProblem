@@ -2,8 +2,6 @@
 '''
 Create a 2d grid, with some percentage of blockage, some percentage of node pairs, and among these node pairs,
 some are already connected. The purpose for it is to mimic the the fractional replay of a game.
-
-action space: all map 100*100 choices, select connect or not connect
 '''
 import numpy as np
 import random
@@ -128,7 +126,7 @@ class Field(object):
         self.width = 100
         self.blockage = 0.01
         self.penaltyNoConnection = -6 * self.height   #whatabout just -1 and 1
-        self.nodePairCnt = 60
+        self.nodePairCnt = 40
         self.rewardFinish = 4 * self.height * self.nodePairCnt
         self.nodePairPercent = 0.01
         self.connectPercent = 0
@@ -157,9 +155,9 @@ class Field(object):
 
         startNodes, endNodes = totalNodePairs[0:self.nodePairCnt],totalNodePairs[self.nodePairCnt:]
         for (x,y) in startNodes:
-            self.mazeBoard[x][y] = 1
+            self.mazeBoard[x][y] = 255
         for (x,y) in endNodes:
-            self.mazeBoard[x][y] = 1
+            self.mazeBoard[x][y] = 155
         for ind in range(len(startNodes)):
             self.D[startNodes[ind]] = endNodes[ind]
         # print(startNodes)
@@ -284,7 +282,7 @@ def copyMaze(maze_field):
 
 
 M = Field()
-im.imsave('gridinit.png', M.mazeBoard)
+im.imsave('grayScaleGridInit.png', M.mazeBoard)
 #
 # M = Field()
 # M.heuristicConnectAll(state = 1)
