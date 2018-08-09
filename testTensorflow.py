@@ -1,4 +1,5 @@
 import tensorflow as tf
+import os
 hello = tf.constant('hello, tensorflow')
 sess = tf.Session()
 print(sess.run(hello))

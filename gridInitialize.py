@@ -128,7 +128,7 @@ class Field(object):
         self.width = 100
         self.blockage = 0.01
         self.penaltyNoConnection = -6 * self.height   #whatabout just -1 and 1
-        self.nodePairCnt = 60
+        self.nodePairCnt = 30
         self.rewardFinish = 4 * self.height * self.nodePairCnt
         self.nodePairPercent = 0.01
         self.connectPercent = 0
@@ -213,39 +213,40 @@ class Field(object):
         # print('D:::::',len(self.D))
         if selectState == 1:  #random select
             s,e = self.selectStartEnd()
-            del self.D[s]
-            self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 0, 0
-            path = astar3.find_path_astar(self.mazeBoard,s,e)
-            if path == "NO WAY!":
-                self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 1, 1
-                # print('NO Way!!!!!!!', s, e)
-                # self.totalReward += self.penaltyNoConnection
-                self.totalReward -=1
-                return -1
-            else:
-                self.Mazeboard = astar3.markPath(self.mazeBoard,path,s)
-                self.totalLen+=len(path)
-                self.connectCnt+=1
-                # self.totalReward -= len(path)
-                self.totalReward += 1
-                # print(len(path))
+
+        del self.D[s]
+        self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 0, 0
+        path = astar3.find_path_astar(self.mazeBoard,s,e)
+        if path == "NO WAY!":
+            self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 1, 1
+            # print('NO Way!!!!!!!', s, e)
+            # self.totalReward += self.penaltyNoConnection
+            self.totalReward -=1
+            return -1
         else:
-            del self.D[s]
-            self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 0, 0
-            path = astar3.find_path_astar(self.mazeBoard, s, e)
-            if path == "NO WAY!":
-                self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 1, 1
-                # print('NO Way!!!!!!!', s, e)
-                # self.totalReward += self.penaltyNoConnection
-                self.totalReward -= 1
-                return -1
-            else:
-                self.Mazeboard = astar3.markPath(self.mazeBoard, path, s)
-                self.totalLen += len(path)
-                self.connectCnt += 1
-                # self.totalReward-=len(path)
-                self.totalReward += 1
-                # print(len(path))
+            self.Mazeboard = astar3.markPath(self.mazeBoard,path,s)
+            self.totalLen+=len(path)
+            self.connectCnt+=1
+            # self.totalReward -= len(path)
+            self.totalReward += 1
+            # print(len(path))
+        # else:
+        #     del self.D[s]
+        #     self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 0, 0
+        #     path = astar3.find_path_astar(self.mazeBoard, s, e)
+        #     if path == "NO WAY!":
+        #         self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 1, 1
+        #         # print('NO Way!!!!!!!', s, e)
+        #         # self.totalReward += self.penaltyNoConnection
+        #         self.totalReward -= 1
+        #         return -1
+        #     else:
+        #         self.Mazeboard = astar3.markPath(self.mazeBoard, path, s)
+        #         self.totalLen += len(path)
+        #         self.connectCnt += 1
+        #         # self.totalReward-=len(path)
+        #         self.totalReward += 1
+        #         # print(len(path))
         return len(path)
     def randomConnect(self):
         self.connectPathAstar()
@@ -284,6 +285,7 @@ def copyMaze(maze_field):
 
 
 M = Field()
+M.randomConnectAll()
 im.imsave('gridinit.png', M.mazeBoard)
 #
 # M = Field()

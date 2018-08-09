@@ -5,7 +5,7 @@ some are already connected. The purpose for it is to mimic the the fractional re
 '''
 import numpy as np
 import random
-import astar3
+import grayScaleAStar
 import copy
 import matplotlib.pyplot as plt
 # Python Imaging Library imports
@@ -19,7 +19,7 @@ from keras.layers import Dense, Activation, Flatten
 from keras.optimizers import Adam, RMSprop
 from collections import deque
 from keras import backend as K
-#
+np.set_printoptions(threshold=np.nan)
 # class maze:
 #     height = 100
 #     width = 100
@@ -105,6 +105,11 @@ from keras import backend as K
 #         i = image(self.Mazeboard)
 #         plt.show()
 
+
+startcolor = 255
+endcolor = 180
+pathcolor = grayScaleAStar.pathvalue
+congestioncolor = 5
 class Field(object):
     # self.height = 100
     # self.width = 100
@@ -126,7 +131,7 @@ class Field(object):
         self.width = 100
         self.blockage = 0.01
         self.penaltyNoConnection = -6 * self.height   #whatabout just -1 and 1
-        self.nodePairCnt = 40
+        self.nodePairCnt =30
         self.rewardFinish = 4 * self.height * self.nodePairCnt
         self.nodePairPercent = 0.01
         self.connectPercent = 0
@@ -134,7 +139,6 @@ class Field(object):
         self.totalLen = 0
         self.connectCnt = 0
         self.totalReward = 0
-
         self.D = {}  # stores start:end pair
         # blockagePointCnt = int(self.blockage*self.height*self.width)
         # blockagePointCnt = self.height
@@ -148,16 +152,16 @@ class Field(object):
         '''
         for simplicity, random blockage and node pairs can have overlaps. This means that blockage can be fewer than actual.
         '''
-        randomSamples = np.random.choice(self.height*self.width,self.nodePairCnt*2)
+        randomSamples = np.random.choice(self.height*self.width,self.nodePairCnt*2,replace=False)
         totalNodePairs = [(int(x/self.width),int(x%self.width)) for x in randomSamples]
         # totalNodePairs = list(zip(random.sample(range(self.width), self.nodePairCnt*2), \
         #                      random.sample(range(self.height), self.nodePairCnt*2)))
 
         startNodes, endNodes = totalNodePairs[0:self.nodePairCnt],totalNodePairs[self.nodePairCnt:]
         for (x,y) in startNodes:
-            self.mazeBoard[x][y] = 255
+            self.mazeBoard[x][y] = startcolor
         for (x,y) in endNodes:
-            self.mazeBoard[x][y] = 155
+            self.mazeBoard[x][y] = endcolor
         for ind in range(len(startNodes)):
             self.D[startNodes[ind]] = endNodes[ind]
         # print(startNodes)
@@ -167,8 +171,28 @@ class Field(object):
         # plt.show()
         self.start_point = list(self.D.keys())
         self.goal_point = list(self.D.values())
-        self.movable_vec = self.start_point  #change to all possible actions
-
+        self.movable_vec = list(self.D.keys())  #all possible actions
+        self.connectedStartPoints = [(-10000,-10000) for _ in range(self.nodePairCnt)]
+        self.connectedEndPoints = [(-10000, -10000) for _ in range(self.nodePairCnt)]
+        self.addGridInfo()
+        self.mazeBoard = np.array(self.mazeBoard,dtype = np.uint8)
+    def addGridInfo(self):
+        for s in self.start_point:
+            e = self.D[s]
+            sx,sy,ex,ey = s[0],s[1],e[0],e[1]
+            if ex < sx:
+                sx,ex = ex,sx
+            if ey < sy:
+                sy, ey = ey, sy
+            for i in range(sx,ex+1):
+                for j in range(sy,ey+1):
+                    self.mazeBoard[i][j] += congestioncolor
+        for s in self.start_point:
+            e = self.D[s]
+            self.mazeBoard[s[0]][s[1]] = startcolor
+            self.mazeBoard[e[0]][e[1]] = endcolor
+    def flattenMaze(self):
+        return self.mazeBoard.flatten()
     def showConnectivity(self):
         return (self.connectCnt)/self.nodePairCnt
 
@@ -186,7 +210,7 @@ class Field(object):
         #can be chosen randomly, this will give us a steady state transition
         s= state
         e = self.D[s]
-        rew = self.connectPathAstar(s,e,selectState = 0)
+        rew = self.connectPathAstar(s,selectState = 0)
         if rew == -1:  #no path, minus something larger than path
             # v = self.penaltyNoConnection
             v = -1
@@ -207,42 +231,49 @@ class Field(object):
         end = self.D[start]
         return start,end
 
-    def connectPathAstar(self,s = 0,e = 0,selectState = 1):
+    def connectPathAstar(self,s = 0,selectState = 1):
         # print('D:::::',len(self.D))
+        if selectState != 1 and (s not in self.D):
+            return 0
         if selectState == 1:  #random select
             s,e = self.selectStartEnd()
-            del self.D[s]
-            self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 0, 0
-            path = astar3.find_path_astar(self.mazeBoard,s,e)
-            if path == "NO WAY!":
-                self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 1, 1
-                # print('NO Way!!!!!!!', s, e)
-                # self.totalReward += self.penaltyNoConnection
-                self.totalReward -=1
-                return -1
-            else:
-                self.Mazeboard = astar3.markPath(self.mazeBoard,path,s)
-                self.totalLen+=len(path)
-                self.connectCnt+=1
-                # self.totalReward -= len(path)
-                self.totalReward += 1
-                # print(len(path))
         else:
-            del self.D[s]
-            self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 0, 0
-            path = astar3.find_path_astar(self.mazeBoard, s, e)
-            if path == "NO WAY!":
-                self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 1, 1
-                # print('NO Way!!!!!!!', s, e)
-                # self.totalReward += self.penaltyNoConnection
-                self.totalReward -= 1
-                return -1
-            else:
-                self.Mazeboard = astar3.markPath(self.mazeBoard, path, s)
-                self.totalLen += len(path)
-                self.connectCnt += 1
-                # self.totalReward-=len(path)
-                self.totalReward += 1
+            e = self.D[s]
+
+        del self.D[s]
+        self.connectedStartPoints[self.connectCnt] = s
+        self.connectedEndPoints[self.connectCnt] = e
+        self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 0, 0
+        path = grayScaleAStar.find_path_astar(self.mazeBoard,s,e)
+        if path == "NO WAY!":
+            self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = startcolor, endcolor
+            # print('NO Way!!!!!!!', s, e)
+            # self.totalReward += self.penaltyNoConnection
+            self.totalReward -=1
+            return -1
+        else:
+            self.Mazeboard = grayScaleAStar.markPath(self.mazeBoard,path,s)
+            self.totalLen+=len(path)
+            self.connectCnt+=1
+            # self.totalReward -= len(path)
+            self.totalReward += 1
+                # print(len(path))
+        # else:
+        #     del self.D[s]
+        #     self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = 0, 0
+        #     path = grayScaleAStar.find_path_astar(self.mazeBoard, s, e)
+        #     if path == "NO WAY!":
+        #         self.mazeBoard[s[0]][s[1]], self.mazeBoard[e[0], e[1]] = startcolor, endcolor
+        #         # print('NO Way!!!!!!!', s, e)
+        #         # self.totalReward += self.penaltyNoConnection
+        #         self.totalReward -= 1
+        #         return -1
+        #     else:
+        #         self.Mazeboard = grayScaleAStar.markPath(self.mazeBoard, path, s)
+        #         self.totalLen += len(path)
+        #         self.connectCnt += 1
+        #         # self.totalReward-=len(path)
+        #         self.totalReward += 1
                 # print(len(path))
         return len(path)
     def randomConnect(self):
@@ -250,7 +281,12 @@ class Field(object):
     def randomConnectAll(self):
         while self.D:
             self.randomConnect()
-
+    def connectAllMultiTimes(self):
+        for iteration in range(5):
+            print(self.showConnectivity())
+            for i in self.start_point:
+                if random.random()<0.5:
+                    self.connectPathAstar(s = i,selectState = 0 )
     def heuristicConnectAll(self,state = 0):  #state = 0 is increasing order from small to big manhattan distance
         newStartPoints = sorted(self.start_point, key = lambda x:np.abs(x[0]-self.D[x][0])+np.abs(x[1]-self.D[x][1]))
         # print(self.D)
@@ -263,7 +299,7 @@ class Field(object):
         # print(np.abs(t[0] - self.D[t][0])+np.abs(t[1]-self.D[t][1]))
         # print(np.abs(t1[0] - self.D[t1][0]) + np.abs(t1[1] - self.D[t1][1]))
         for s in newStartPoints:
-            self.connectPathAstar(s,self.D[s],selectState=0)
+            self.connectPathAstar(s,selectState=0)
     def drawBoard(self):
         i = image(self.Mazeboard)
         plt.show()
@@ -280,13 +316,24 @@ def copyMaze(maze_field):
     return temp
 
 
-
-M = Field()
-im.imsave('grayScaleGridInit.png', M.mazeBoard)
 #
 # M = Field()
+# print(M.connectedStartPoints)
+# print(M.connectedEndPoints)
+# M.randomConnectAll()
+# print(M.connectCnt)
+# print(M.connectedStartPoints)
+# print(M.connectedEndPoints)
+# M.connectAllMultiTimes()
+# print(M.flattenMaze().shape)
+# print(M.showConnectivity())
+# # print(M.mazeBoard)
+# plt.imshow(M.mazeBoard)
+# plt.imsave(fname = 'grayScaleGridInit.png',format = 'png', arr = M.mazeBoard,origin = 'upper')
+# #
+# M = Field()
 # M.heuristicConnectAll(state = 1)
-# # M.randomConnectAll()
+# M.randomConnectAll()
 # print(M.showConnectivity())
 # M.display()
 #

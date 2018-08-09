@@ -1,5 +1,5 @@
 from heapq import heappop, heappush
-pathvalue = 2
+pathvalue = 120
 
 def heuristic(cell, goal):
     return abs(cell[0] - goal[0]) + abs(cell[1] - goal[1])
@@ -26,12 +26,12 @@ def find_path_astar(maze,s,e):
 def maze2graph(maze):
     height = len(maze)
     width = len(maze[0]) if height else 0
-    graph = {(i, j): [] for j in range(width) for i in range(height) if not maze[i][j]}
+    graph = {(i, j): [] for j in range(width) for i in range(height) if maze[i][j] <pathvalue}
     for row, col in graph.keys():
-        if row < height - 1 and not maze[row + 1][col]:
+        if row < height - 1 and maze[row + 1][col] < pathvalue:
             graph[(row, col)].append(("S", (row + 1, col)))
             graph[(row + 1, col)].append(("N", (row, col)))
-        if col < width - 1 and not maze[row][col + 1]:
+        if col < width - 1 and  maze[row][col + 1]<pathvalue:
             graph[(row, col)].append(("E", (row, col + 1)))
             graph[(row, col + 1)].append(("W", (row, col)))
     return graph

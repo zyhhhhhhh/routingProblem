@@ -26,7 +26,7 @@ for i in range(3):
 	dql_solver = dqn_solver.DQN_Solver(state_size, action_size)
 
 	# episodes = 20000
-	episodes = 20000
+	episodes = 20
 	times = 1000
 	size = 10
 	barriar_rate = 0.1
