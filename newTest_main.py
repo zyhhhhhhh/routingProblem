@@ -59,8 +59,8 @@ else:
 for i in range(4):
 
     # episodes = 20000
-    trainAmount = 5  #how many maze do we train on?
-    episodes = 10  # how many episodes each maze?
+    trainAmount = 100  #how many maze do we train on?
+    episodes = 100  # how many episodes each maze?
     times = 1000
     size = 10
     barriar_rate = 0.1
@@ -106,6 +106,8 @@ for i in range(4):
     simple1Len0 = []
     for _ in range(testIterations):
         tmaze = grayScaleGridInit.Field()
+
+
         #dqn
         testMaze = grayScaleGridInit.copyMaze(tmaze)
         state = testMaze.randomPickStart()
@@ -141,13 +143,13 @@ for i in range(4):
 
         #H0
         simpleCopy = grayScaleGridInit.copyMaze(tmaze)
-        simpleCopy.randomConnectAll()
+        simpleCopy.heuristicConnectAll(state = 0)
         simpleConnectivity0.append(simpleCopy.showConnectivity())
         simpleLen0.append(simpleCopy.totalLen / simpleCopy.connectCnt)
 
         #H1
         simple1Copy = grayScaleGridInit.copyMaze(tmaze)
-        simple1Copy.randomConnectAll()
+        simple1Copy.heuristicConnectAll(state = 1)
         simple1Connectivity0.append(simple1Copy.showConnectivity())
         simple1Len0.append(simple1Copy.totalLen / simple1Copy.connectCnt)
 
