@@ -60,7 +60,7 @@ for i in range(4):
 
     # episodes = 20000
     trainAmount = 20  #how many maze do we train on?
-    episodes = 100  # how many episodes each maze?
+    episodes = 10  # how many episodes each maze?
     times = 1000
     size = 10
     barriar_rate = 0.1
