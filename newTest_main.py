@@ -56,11 +56,11 @@ else:
 
 # dql_solver = newDQN_solver.DQN_Solver(state_size, action_size)
 
-for i in range(4):
+for i in range(10):
 
     # episodes = 20000
-    trainAmount = 20  #how many maze do we train on?
-    episodes = 10  # how many episodes each maze?
+    trainAmount = 1000  #how many maze do we train on?
+    episodes = 20  # how many episodes each maze?
     times = 1000
     size = 10
     barriar_rate = 0.1
