@@ -59,8 +59,8 @@ else:
 for i in range(4):
 
     # episodes = 20000
-    trainAmount = 1000  #how many maze do we train on?
-    episodes = 1000  # how many episodes each maze?
+    trainAmount = 2000  #how many maze do we train on?
+    episodes = 100  # how many episodes each maze?
     times = 1000
     size = 10
     barriar_rate = 0.1
