@@ -59,7 +59,7 @@ else:
 for i in range(4):
 
     # episodes = 20000
-    trainAmount = 2000  #how many maze do we train on?
+    trainAmount = 20  #how many maze do we train on?
     episodes = 100  # how many episodes each maze?
     times = 1000
     size = 10
