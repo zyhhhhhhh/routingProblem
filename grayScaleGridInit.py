@@ -216,7 +216,7 @@ class Field(object):
             v = -1
         else:
             # v = -rew
-            v = 1
+            v = self.height/rew
         # print('size of vec:',len(self.movable_vec))
         # print('removing',state)
         self.movable_vec.remove(state)
@@ -256,7 +256,7 @@ class Field(object):
             self.totalLen+=len(path)
             self.connectCnt+=1
             # self.totalReward -= len(path)
-            self.totalReward += 1
+            self.totalReward += self.height/len(path)
                 # print(len(path))
         # else:
         #     del self.D[s]
